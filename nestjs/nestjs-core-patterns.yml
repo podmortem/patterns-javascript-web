@@ -1,0 +1,423 @@
+metadata:
+  library_id: "nestjs-core-patterns"
+  version: "1.0.0"
+  maintainer: "podmortem-community"
+  compatibility: ["nestjs-8.x", "nestjs-9.x", "nestjs-10.x"]
+  dependencies: []
+
+categories:
+  - web_framework
+  - dependency_injection
+  - decorators
+  - modules
+  - guards
+  - interceptors
+  - microservices
+
+patterns:
+  - id: "nestjs_module_not_found"
+    name: "NestJS Module Not Found"
+    
+    primary_pattern:
+      regex: "Nest can't resolve dependencies|Cannot resolve dependency|Module.*not found|No provider.*found"
+      confidence: 0.92
+    
+    secondary_patterns:
+      - regex: "@Module\\(|@Injectable\\(|@Controller\\("
+        weight: 0.6
+        proximity_window: 20
+      - regex: "providers.*array|imports.*array"
+        weight: 0.5
+        proximity_window: 25
+      - regex: "dependency injection|DI.*error"
+        weight: 0.4
+        proximity_window: 30
+    
+    severity: "HIGH"
+    category: ["dependency_injection", "modules"]
+    
+    remediation:
+      description: "NestJS dependency injection failed to resolve dependencies"
+      common_causes:
+        - "Missing provider in module's providers array"
+        - "Circular dependency between modules"
+        - "Provider not exported from module"
+        - "Incorrect import/export configuration"
+      
+      suggested_commands:
+        - "Add provider to module's providers array"
+        - "Export provider from module if used elsewhere"
+        - "Check for circular dependencies between modules"
+        - "Use forwardRef() for circular dependencies"
+      
+      documentation_links:
+        - "https://docs.nestjs.com/fundamentals/custom-providers"
+        - "https://docs.nestjs.com/fundamentals/circular-dependency"
+    
+    context_extraction:
+      lines_before: 15
+      lines_after: 12
+      include_stack_trace: true
+
+  - id: "nestjs_guard_authorization_error"
+    name: "NestJS Guard Authorization Error"
+    
+    primary_pattern:
+      regex: "UnauthorizedException|ForbiddenException|Guard.*denied|Authorization.*failed"
+      confidence: 0.88
+    
+    secondary_patterns:
+      - regex: "@UseGuards\\(|@Guard\\(|CanActivate"
+        weight: 0.7
+        proximity_window: 15
+      - regex: "JWT.*expired|token.*invalid|bearer.*token"
+        weight: 0.6
+        proximity_window: 20
+      - regex: "401.*Unauthorized|403.*Forbidden"
+        weight: 0.5
+        proximity_window: 25
+    
+    severity: "MEDIUM"
+    category: ["authentication", "authorization", "guards"]
+    
+    remediation:
+      description: "NestJS guard rejected the request due to authorization failure"
+      common_causes:
+        - "Invalid or expired JWT token"
+        - "Missing authorization header"
+        - "Insufficient user permissions"
+        - "Guard logic returning false"
+      
+      suggested_commands:
+        - "Check JWT token validity and expiration"
+        - "Verify Authorization header format"
+        - "Review guard implementation logic"
+        - "Ensure user has required roles/permissions"
+      
+      documentation_links:
+        - "https://docs.nestjs.com/guards"
+        - "https://docs.nestjs.com/security/authentication"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 8
+      include_stack_trace: true
+
+  - id: "nestjs_validation_error"
+    name: "NestJS Validation Error"
+    
+    primary_pattern:
+      regex: "ValidationError|BadRequestException.*validation|class-validator.*error|validation.*failed"
+      confidence: 0.90
+    
+    secondary_patterns:
+      - regex: "@IsString\\(\\)|@IsNumber\\(\\)|@IsEmail\\(\\)"
+        weight: 0.6
+        proximity_window: 20
+      - regex: "class-validator|class-transformer"
+        weight: 0.7
+        proximity_window: 15
+      - regex: "ValidationPipe|@UsePipes\\("
+        weight: 0.5
+        proximity_window: 25
+    
+    severity: "MEDIUM"
+    category: ["validation", "dto", "pipes"]
+    
+    remediation:
+      description: "NestJS validation pipe failed to validate request data"
+      common_causes:
+        - "Request data doesn't match DTO validation rules"
+        - "Missing required fields in request"
+        - "Invalid data types or formats"
+        - "Validation decorators misconfigured"
+      
+      suggested_commands:
+        - "Check request data against DTO validation rules"
+        - "Ensure all required fields are provided"
+        - "Verify data types match validation decorators"
+        - "Review ValidationPipe configuration"
+      
+      documentation_links:
+        - "https://docs.nestjs.com/techniques/validation"
+        - "https://github.com/typestack/class-validator"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 8
+      include_stack_trace: true
+
+  - id: "nestjs_microservice_connection_error"
+    name: "NestJS Microservice Connection Error"
+    
+    primary_pattern:
+      regex: "Microservice.*connection.*failed|ECONNREFUSED.*microservice|Transport.*error|Message.*pattern.*not.*found"
+      confidence: 0.85
+    
+    secondary_patterns:
+      - regex: "@MessagePattern\\(|@EventPattern\\("
+        weight: 0.7
+        proximity_window: 20
+      - regex: "ClientProxy|@Client\\(|microservices"
+        weight: 0.6
+        proximity_window: 25
+      - regex: "TCP|Redis|MQTT|NATS|RMQ"
+        weight: 0.5
+        proximity_window: 30
+    
+    severity: "HIGH"
+    category: ["microservices", "connectivity"]
+    
+    remediation:
+      description: "NestJS microservice failed to establish connection or find message handler"
+      common_causes:
+        - "Microservice not running or unreachable"
+        - "Message pattern not registered"
+        - "Transport configuration mismatch"
+        - "Network connectivity issues"
+      
+      suggested_commands:
+        - "Verify microservice is running and accessible"
+        - "Check message pattern registration"
+        - "Validate transport configuration (TCP, Redis, etc.)"
+        - "Test network connectivity between services"
+      
+      documentation_links:
+        - "https://docs.nestjs.com/microservices/basics"
+        - "https://docs.nestjs.com/microservices/redis"
+    
+    context_extraction:
+      lines_before: 15
+      lines_after: 10
+      include_stack_trace: true
+
+  - id: "nestjs_interceptor_error"
+    name: "NestJS Interceptor Error"
+    
+    primary_pattern:
+      regex: "Interceptor.*error|NestInterceptor.*failed|intercept.*method.*error|interceptor.*exception"
+      confidence: 0.83
+    
+    secondary_patterns:
+      - regex: "@UseInterceptors\\(|NestInterceptor|intercept\\("
+        weight: 0.7
+        proximity_window: 15
+      - regex: "Observable|rxjs|pipe\\("
+        weight: 0.5
+        proximity_window: 20
+      - regex: "ExecutionContext|CallHandler"
+        weight: 0.6
+        proximity_window: 25
+    
+    severity: "MEDIUM"
+    category: ["interceptors", "aop"]
+    
+    remediation:
+      description: "NestJS interceptor encountered an error during request/response processing"
+      common_causes:
+        - "Exception thrown in interceptor logic"
+        - "RxJS operator errors in observable chain"
+        - "Incorrect ExecutionContext usage"
+        - "Async operation failures in interceptor"
+      
+      suggested_commands:
+        - "Add error handling in interceptor methods"
+        - "Check RxJS operators and observable chains"
+        - "Validate ExecutionContext usage"
+        - "Handle async operations properly"
+      
+      documentation_links:
+        - "https://docs.nestjs.com/interceptors"
+        - "https://rxjs.dev/guide/error-handling"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 8
+      include_stack_trace: true
+
+  - id: "nestjs_database_entity_error"
+    name: "NestJS Database Entity Error"
+    
+    primary_pattern:
+      regex: "TypeORM.*error|Entity.*not.*found|Repository.*error|QueryFailedError|EntityNotFoundError"
+      confidence: 0.87
+    
+    secondary_patterns:
+      - regex: "@Entity\\(|@Repository\\(|@InjectRepository\\("
+        weight: 0.7
+        proximity_window: 20
+      - regex: "TypeORM|typeorm|Repository"
+        weight: 0.6
+        proximity_window: 25
+      - regex: "database.*connection|ECONNREFUSED.*database"
+        weight: 0.5
+        proximity_window: 30
+    
+    severity: "HIGH"
+    category: ["database", "orm", "entities"]
+    
+    remediation:
+      description: "NestJS database operation failed with TypeORM error"
+      common_causes:
+        - "Entity not found in database"
+        - "Database connection issues"
+        - "SQL query syntax errors"
+        - "Entity relationship configuration problems"
+      
+      suggested_commands:
+        - "Check entity exists in database"
+        - "Verify database connection configuration"
+        - "Validate entity relationships and decorators"
+        - "Review SQL query generation and constraints"
+      
+      documentation_links:
+        - "https://docs.nestjs.com/techniques/database"
+        - "https://typeorm.io/error-handling"
+    
+    context_extraction:
+      lines_before: 15
+      lines_after: 12
+      include_stack_trace: true
+
+  - id: "nestjs_swagger_documentation_error"
+    name: "NestJS Swagger Documentation Error"
+    
+    primary_pattern:
+      regex: "Swagger.*error|OpenAPI.*generation.*failed|@ApiProperty.*error|swagger.*setup.*error"
+      confidence: 0.81
+    
+    secondary_patterns:
+      - regex: "@ApiProperty\\(|@ApiResponse\\(|@ApiTags\\("
+        weight: 0.7
+        proximity_window: 15
+      - regex: "SwaggerModule|DocumentBuilder"
+        weight: 0.6
+        proximity_window: 20
+      - regex: "swagger.*ui|openapi.*spec"
+        weight: 0.5
+        proximity_window: 25
+    
+    severity: "LOW"
+    category: ["documentation", "swagger", "openapi"]
+    
+    remediation:
+      description: "NestJS Swagger documentation generation failed"
+      common_causes:
+        - "Invalid OpenAPI decorators configuration"
+        - "Complex type definitions breaking schema generation"
+        - "Circular references in DTOs"
+        - "Missing or incorrect Swagger setup"
+      
+      suggested_commands:
+        - "Check @ApiProperty decorators syntax"
+        - "Simplify complex type definitions"
+        - "Resolve circular references in DTOs"
+        - "Verify SwaggerModule setup in main.ts"
+      
+      documentation_links:
+        - "https://docs.nestjs.com/openapi/introduction"
+        - "https://docs.nestjs.com/openapi/decorators"
+    
+    context_extraction:
+      lines_before: 10
+      lines_after: 8
+
+  - id: "nestjs_exception_filter_error"
+    name: "NestJS Exception Filter Error"
+    
+    primary_pattern:
+      regex: "ExceptionFilter.*error|catch.*method.*error|exception.*filter.*failed|HttpException.*filter"
+      confidence: 0.84
+    
+    secondary_patterns:
+      - regex: "@UseFilters\\(|ExceptionFilter|@Catch\\("
+        weight: 0.7
+        proximity_window: 15
+      - regex: "ArgumentsHost|HttpException"
+        weight: 0.6
+        proximity_window: 20
+      - regex: "catch.*method|exception.*handling"
+        weight: 0.5
+        proximity_window: 25
+    
+    severity: "MEDIUM"
+    category: ["exception_handling", "filters"]
+    
+    remediation:
+      description: "NestJS exception filter failed to handle exception properly"
+      common_causes:
+        - "Exception thrown within exception filter"
+        - "Incorrect ArgumentsHost usage"
+        - "Response already sent before filter execution"
+        - "Filter configuration or registration issues"
+      
+      suggested_commands:
+        - "Add error handling within exception filters"
+        - "Check ArgumentsHost context switching"
+        - "Ensure response is not sent multiple times"
+        - "Verify filter registration and scope"
+      
+      documentation_links:
+        - "https://docs.nestjs.com/exception-filters"
+        - "https://docs.nestjs.com/fundamentals/execution-context"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 10
+      include_stack_trace: true
+
+  - id: "nestjs_websocket_gateway_error"
+    name: "NestJS WebSocket Gateway Error"
+    
+    primary_pattern:
+      regex: "WebSocketGateway.*error|Socket.*connection.*failed|@SubscribeMessage.*error|gateway.*error"
+      confidence: 0.86
+    
+    secondary_patterns:
+      - regex: "@WebSocketGateway\\(|@SubscribeMessage\\("
+        weight: 0.7
+        proximity_window: 15
+      - regex: "OnGatewayConnection|OnGatewayDisconnect"
+        weight: 0.6
+        proximity_window: 20
+      - regex: "socket\\.io|websocket|ws"
+        weight: 0.5
+        proximity_window: 25
+    
+    severity: "MEDIUM"
+    category: ["websockets", "real_time"]
+    
+    remediation:
+      description: "NestJS WebSocket gateway encountered connection or message handling error"
+      common_causes:
+        - "WebSocket connection establishment failures"
+        - "Message handler exceptions"
+        - "CORS issues with WebSocket connections"
+        - "Authentication failures in gateway"
+      
+      suggested_commands:
+        - "Check WebSocket server configuration"
+        - "Add error handling in message handlers"
+        - "Configure CORS for WebSocket connections"
+        - "Verify authentication logic in gateway"
+      
+      documentation_links:
+        - "https://docs.nestjs.com/websockets/gateways"
+        - "https://socket.io/docs/v4/troubleshooting-connection-issues/"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 10
+      include_stack_trace: true
+
+related_patterns:
+  - id: "nestjs_module_not_found"
+    related_to: ["nestjs_database_entity_error"]
+  - id: "nestjs_guard_authorization_error"
+    related_to: ["nestjs_exception_filter_error"]
+  - id: "nestjs_validation_error"
+    related_to: ["nestjs_exception_filter_error"]
+  - id: "nestjs_microservice_connection_error"
+    related_to: ["nestjs_module_not_found"]
+  - id: "nestjs_interceptor_error"
+    related_to: ["nestjs_exception_filter_error"]

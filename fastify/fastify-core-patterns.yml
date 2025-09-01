@@ -1,0 +1,416 @@
+metadata:
+  library_id: "fastify-core-patterns"
+  version: "1.0.0"
+  maintainer: "podmortem-community"
+  compatibility: ["fastify-3.x", "fastify-4.x"]
+  dependencies: []
+
+categories:
+  - web_framework
+  - plugins
+  - hooks
+  - validation
+  - serialization
+  - async_hooks
+
+patterns:
+  - id: "fastify_plugin_registration_error"
+    name: "Fastify Plugin Registration Error"
+    
+    primary_pattern:
+      regex: "Plugin.*registration.*failed|fastify-plugin.*error|register.*plugin.*error|Plugin.*timeout"
+      confidence: 0.90
+    
+    secondary_patterns:
+      - regex: "fastify\\.register\\(|fp\\(|fastify-plugin"
+        weight: 0.7
+        proximity_window: 15
+      - regex: "plugin.*options|encapsulation.*error"
+        weight: 0.5
+        proximity_window: 20
+      - regex: "async.*plugin|plugin.*context"
+        weight: 0.4
+        proximity_window: 25
+    
+    severity: "HIGH"
+    category: ["plugins", "registration"]
+    
+    remediation:
+      description: "Fastify plugin registration failed during application startup"
+      common_causes:
+        - "Plugin function throws unhandled exception"
+        - "Plugin registration timeout"
+        - "Incorrect plugin encapsulation"
+        - "Missing plugin dependencies"
+      
+      suggested_commands:
+        - "Add error handling in plugin functions"
+        - "Check plugin registration order and dependencies"
+        - "Verify plugin encapsulation with fastify-plugin"
+        - "Review async plugin initialization"
+      
+      documentation_links:
+        - "https://www.fastify.io/docs/latest/Reference/Plugins/"
+        - "https://github.com/fastify/fastify-plugin"
+    
+    context_extraction:
+      lines_before: 15
+      lines_after: 12
+      include_stack_trace: true
+
+  - id: "fastify_schema_validation_error"
+    name: "Fastify Schema Validation Error"
+    
+    primary_pattern:
+      regex: "Schema.*validation.*failed|ValidationError|ajv.*validation.*error|Invalid.*request.*body"
+      confidence: 0.88
+    
+    secondary_patterns:
+      - regex: "schema.*body|schema.*query|schema.*params"
+        weight: 0.7
+        proximity_window: 15
+      - regex: "ajv|JSON.*Schema|validation.*schema"
+        weight: 0.6
+        proximity_window: 20
+      - regex: "400.*Bad.*Request|validation.*error"
+        weight: 0.5
+        proximity_window: 25
+    
+    severity: "MEDIUM"
+    category: ["validation", "schema"]
+    
+    remediation:
+      description: "Fastify JSON schema validation failed for request data"
+      common_causes:
+        - "Request data doesn't match defined schema"
+        - "Missing required properties in request"
+        - "Invalid data types in request payload"
+        - "Schema definition errors"
+      
+      suggested_commands:
+        - "Validate request data against route schema"
+        - "Check schema definition for correctness"
+        - "Ensure all required properties are provided"
+        - "Review AJV validation configuration"
+      
+      documentation_links:
+        - "https://www.fastify.io/docs/latest/Reference/Validation-and-Serialization/"
+        - "https://ajv.js.org/guide/getting-started.html"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 8
+      include_stack_trace: true
+
+  - id: "fastify_hook_error"
+    name: "Fastify Hook Error"
+    
+    primary_pattern:
+      regex: "Hook.*error|preHandler.*error|onRequest.*error|onResponse.*error|hook.*failed"
+      confidence: 0.85
+    
+    secondary_patterns:
+      - regex: "addHook\\(|preHandler|onRequest|onResponse|preValidation"
+        weight: 0.7
+        proximity_window: 15
+      - regex: "hook.*function|async.*hook"
+        weight: 0.5
+        proximity_window: 20
+      - regex: "request.*lifecycle|hook.*chain"
+        weight: 0.4
+        proximity_window: 25
+    
+    severity: "HIGH"
+    category: ["hooks", "lifecycle"]
+    
+    remediation:
+      description: "Fastify lifecycle hook encountered an error during request processing"
+      common_causes:
+        - "Unhandled exception in hook function"
+        - "Async hook not properly awaited"
+        - "Hook modifying request/reply incorrectly"
+        - "Hook chain interruption"
+      
+      suggested_commands:
+        - "Add try/catch blocks in hook functions"
+        - "Ensure async hooks are properly awaited"
+        - "Check request/reply modifications in hooks"
+        - "Review hook registration and execution order"
+      
+      documentation_links:
+        - "https://www.fastify.io/docs/latest/Reference/Hooks/"
+        - "https://www.fastify.io/docs/latest/Reference/Lifecycle/"
+    
+    context_extraction:
+      lines_before: 15
+      lines_after: 10
+      include_stack_trace: true
+
+  - id: "fastify_serialization_error"
+    name: "Fastify Serialization Error"
+    
+    primary_pattern:
+      regex: "Serialization.*error|JSON.*stringify.*error|response.*serialization.*failed|serialize.*error"
+      confidence: 0.83
+    
+    secondary_patterns:
+      - regex: "response.*schema|serialize.*schema"
+        weight: 0.6
+        proximity_window: 20
+      - regex: "JSON\\.stringify|fast-json-stringify"
+        weight: 0.7
+        proximity_window: 15
+      - regex: "circular.*reference|Converting.*circular.*structure"
+        weight: 0.8
+        proximity_window: 10
+    
+    severity: "MEDIUM"
+    category: ["serialization", "response"]
+    
+    remediation:
+      description: "Fastify failed to serialize response data to JSON"
+      common_causes:
+        - "Circular references in response object"
+        - "Response data doesn't match response schema"
+        - "Invalid JSON serialization of complex objects"
+        - "Schema serialization configuration errors"
+      
+      suggested_commands:
+        - "Check for circular references in response data"
+        - "Validate response data against response schema"
+        - "Use JSON.stringify replacer for complex objects"
+        - "Review fast-json-stringify configuration"
+      
+      documentation_links:
+        - "https://www.fastify.io/docs/latest/Reference/Validation-and-Serialization/"
+        - "https://github.com/fastify/fast-json-stringify"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 8
+
+  - id: "fastify_server_startup_error"
+    name: "Fastify Server Startup Error"
+    
+    primary_pattern:
+      regex: "listen.*EADDRINUSE|server.*failed.*start|address.*already.*in.*use|fastify.*listen.*error"
+      confidence: 0.92
+    
+    secondary_patterns:
+      - regex: "fastify\\.listen\\(|server\\.listen\\("
+        weight: 0.7
+        proximity_window: 15
+      - regex: "EADDRINUSE|address.*already.*in.*use"
+        weight: 0.8
+        proximity_window: 10
+      - regex: "port.*\\d+|host.*address"
+        weight: 0.4
+        proximity_window: 25
+    
+    severity: "CRITICAL"
+    category: ["server", "startup", "port_binding"]
+    
+    remediation:
+      description: "Fastify server failed to start and bind to specified address/port"
+      common_causes:
+        - "Port already in use by another process"
+        - "Invalid host or port configuration"
+        - "Insufficient permissions to bind to port"
+        - "Network interface not available"
+      
+      suggested_commands:
+        - "Check port usage: netstat -tulpn | grep :3000"
+        - "Kill process using port: lsof -ti:3000 | xargs kill -9"
+        - "Use different port: fastify.listen({port: 3001})"
+        - "Check host binding: fastify.listen({host: '0.0.0.0'})"
+      
+      documentation_links:
+        - "https://www.fastify.io/docs/latest/Reference/Server/"
+        - "https://nodejs.org/api/net.html#net_server_listen"
+    
+    context_extraction:
+      lines_before: 15
+      lines_after: 10
+
+  - id: "fastify_route_handler_error"
+    name: "Fastify Route Handler Error"
+    
+    primary_pattern:
+      regex: "Route.*handler.*error|handler.*function.*error|route.*processing.*failed|async.*handler.*error"
+      confidence: 0.87
+    
+    secondary_patterns:
+      - regex: "fastify\\.get\\(|fastify\\.post\\(|fastify\\.route\\("
+        weight: 0.6
+        proximity_window: 20
+      - regex: "async.*function.*request.*reply|handler.*async"
+        weight: 0.7
+        proximity_window: 15
+      - regex: "reply\\.send\\(|reply\\.code\\("
+        weight: 0.5
+        proximity_window: 25
+    
+    severity: "HIGH"
+    category: ["routes", "handlers"]
+    
+    remediation:
+      description: "Fastify route handler encountered an error during request processing"
+      common_causes:
+        - "Unhandled exception in route handler"
+        - "Async handler not properly awaited"
+        - "Reply sent multiple times"
+        - "Invalid response data or status code"
+      
+      suggested_commands:
+        - "Add try/catch blocks in route handlers"
+        - "Ensure async handlers are properly awaited"
+        - "Check that reply is sent only once"
+        - "Validate response data and status codes"
+      
+      documentation_links:
+        - "https://www.fastify.io/docs/latest/Reference/Routes/"
+        - "https://www.fastify.io/docs/latest/Reference/Reply/"
+    
+    context_extraction:
+      lines_before: 15
+      lines_after: 12
+      include_stack_trace: true
+
+  - id: "fastify_decorator_error"
+    name: "Fastify Decorator Error"
+    
+    primary_pattern:
+      regex: "Decorator.*error|decorate.*error|FST_ERR_DEC.*|decorator.*already.*exists"
+      confidence: 0.84
+    
+    secondary_patterns:
+      - regex: "fastify\\.decorate\\(|fastify\\.decorateRequest\\("
+        weight: 0.7
+        proximity_window: 15
+      - regex: "decorator.*name|decorate.*function"
+        weight: 0.5
+        proximity_window: 20
+      - regex: "encapsulation.*context|decorator.*scope"
+        weight: 0.4
+        proximity_window: 25
+    
+    severity: "MEDIUM"
+    category: ["decorators", "encapsulation"]
+    
+    remediation:
+      description: "Fastify decorator registration or usage failed"
+      common_causes:
+        - "Decorator name already exists"
+        - "Decorator used outside of encapsulation context"
+        - "Invalid decorator function or value"
+        - "Decorator registration timing issues"
+      
+      suggested_commands:
+        - "Check for duplicate decorator names"
+        - "Ensure decorators are registered before use"
+        - "Verify decorator encapsulation context"
+        - "Review decorator registration order"
+      
+      documentation_links:
+        - "https://www.fastify.io/docs/latest/Reference/Decorators/"
+        - "https://www.fastify.io/docs/latest/Guides/Plugins-Guide/"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 8
+
+  - id: "fastify_content_type_parser_error"
+    name: "Fastify Content Type Parser Error"
+    
+    primary_pattern:
+      regex: "Content.*type.*parser.*error|addContentTypeParser.*error|parser.*not.*found|unsupported.*content.*type"
+      confidence: 0.82
+    
+    secondary_patterns:
+      - regex: "addContentTypeParser\\(|contentTypeParser"
+        weight: 0.7
+        proximity_window: 15
+      - regex: "application/json|application/xml|multipart/form-data"
+        weight: 0.5
+        proximity_window: 20
+      - regex: "Content-Type.*header|request.*body.*parsing"
+        weight: 0.6
+        proximity_window: 25
+    
+    severity: "MEDIUM"
+    category: ["parsing", "content_type"]
+    
+    remediation:
+      description: "Fastify failed to parse request body with specified content type"
+      common_causes:
+        - "No parser registered for content type"
+        - "Parser function throws exception"
+        - "Invalid or malformed request body"
+        - "Content-Type header mismatch"
+      
+      suggested_commands:
+        - "Register parser: fastify.addContentTypeParser('text/plain', parser)"
+        - "Add error handling in parser functions"
+        - "Validate Content-Type header in requests"
+        - "Check request body format and encoding"
+      
+      documentation_links:
+        - "https://www.fastify.io/docs/latest/Reference/ContentTypeParser/"
+        - "https://www.fastify.io/docs/latest/Reference/Server/#addcontenttypeparser"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 8
+
+  - id: "fastify_logger_error"
+    name: "Fastify Logger Error"
+    
+    primary_pattern:
+      regex: "Logger.*error|pino.*error|logging.*failed|log.*stream.*error"
+      confidence: 0.80
+    
+    secondary_patterns:
+      - regex: "pino|logger.*options|log.*level"
+        weight: 0.6
+        proximity_window: 20
+      - regex: "fastify.*logger|logger.*configuration"
+        weight: 0.5
+        proximity_window: 25
+      - regex: "log.*destination|stream.*error"
+        weight: 0.7
+        proximity_window: 15
+    
+    severity: "LOW"
+    category: ["logging", "configuration"]
+    
+    remediation:
+      description: "Fastify logger encountered an error during log processing"
+      common_causes:
+        - "Log destination stream errors"
+        - "Invalid logger configuration"
+        - "Log level or format issues"
+        - "File system permissions for log files"
+      
+      suggested_commands:
+        - "Check log file permissions and disk space"
+        - "Validate logger configuration options"
+        - "Review log level and format settings"
+        - "Test log destination stream connectivity"
+      
+      documentation_links:
+        - "https://www.fastify.io/docs/latest/Reference/Logging/"
+        - "https://github.com/pinojs/pino"
+    
+    context_extraction:
+      lines_before: 10
+      lines_after: 8
+
+related_patterns:
+  - id: "fastify_plugin_registration_error"
+    related_to: ["fastify_decorator_error", "fastify_server_startup_error"]
+  - id: "fastify_schema_validation_error"
+    related_to: ["fastify_serialization_error"]
+  - id: "fastify_hook_error"
+    related_to: ["fastify_route_handler_error"]
+  - id: "fastify_route_handler_error"
+    related_to: ["fastify_serialization_error", "fastify_content_type_parser_error"]

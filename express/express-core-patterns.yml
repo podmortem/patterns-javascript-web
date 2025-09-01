@@ -1,0 +1,414 @@
+metadata:
+  library_id: "express-core-patterns"
+  version: "1.0.0"
+  maintainer: "podmortem-community"
+  compatibility: ["express-4.x", "express-5.x"]
+  dependencies: []
+
+categories:
+  - web_framework
+  - middleware
+  - routing
+  - error_handling
+  - http_server
+  - request_handling
+
+patterns:
+  - id: "express_middleware_error"
+    name: "Express Middleware Error"
+    
+    primary_pattern:
+      regex: "Error.*middleware|middleware.*error|next\\(.*Error\\)|middleware.*failed"
+      confidence: 0.90
+    
+    secondary_patterns:
+      - regex: "app\\.use\\(|router\\.use\\("
+        weight: 0.5
+        proximity_window: 20
+      - regex: "req.*res.*next|function.*req.*res.*next"
+        weight: 0.6
+        proximity_window: 15
+      - regex: "Cannot set headers after they are sent"
+        weight: 0.7
+        proximity_window: 25
+    
+    severity: "HIGH"
+    category: ["middleware", "request_handling"]
+    
+    remediation:
+      description: "Express middleware encountered an error during request processing"
+      common_causes:
+        - "Unhandled exceptions in middleware functions"
+        - "Headers already sent before error handling"
+        - "Middleware not calling next() properly"
+        - "Circular middleware dependencies"
+      
+      suggested_commands:
+        - "Add try/catch blocks in middleware functions"
+        - "Ensure next() is called in all middleware paths"
+        - "Check for duplicate header setting"
+        - "Review middleware order and dependencies"
+      
+      documentation_links:
+        - "https://expressjs.com/en/guide/error-handling.html"
+        - "https://expressjs.com/en/guide/writing-middleware.html"
+    
+    context_extraction:
+      lines_before: 15
+      lines_after: 10
+      include_stack_trace: true
+
+  - id: "express_route_not_found"
+    name: "Express Route Not Found"
+    
+    primary_pattern:
+      regex: "Cannot GET.*|Cannot POST.*|Cannot PUT.*|Cannot DELETE.*|404.*Not Found"
+      confidence: 0.85
+    
+    secondary_patterns:
+      - regex: "app\\.get\\(|app\\.post\\(|app\\.put\\(|app\\.delete\\("
+        weight: 0.4
+        proximity_window: 30
+      - regex: "router\\.get\\(|router\\.post\\("
+        weight: 0.4
+        proximity_window: 30
+      - regex: "404|Not Found|route.*not.*found"
+        weight: 0.6
+        proximity_window: 15
+    
+    severity: "MEDIUM"
+    category: ["routing", "http_status"]
+    
+    remediation:
+      description: "Express could not find a matching route for the request"
+      common_causes:
+        - "Route not defined for the requested path and method"
+        - "Incorrect route path pattern"
+        - "Route defined after catch-all handler"
+        - "Missing route parameters or query handling"
+      
+      suggested_commands:
+        - "Verify route is defined: app.get('/path', handler)"
+        - "Check route path matches request URL"
+        - "Ensure route order is correct (specific before general)"
+        - "Add catch-all handler: app.use('*', notFoundHandler)"
+      
+      documentation_links:
+        - "https://expressjs.com/en/guide/routing.html"
+        - "https://expressjs.com/en/starter/basic-routing.html"
+    
+    context_extraction:
+      lines_before: 8
+      lines_after: 5
+
+  - id: "express_server_startup_error"
+    name: "Express Server Startup Error"
+    
+    primary_pattern:
+      regex: "listen EADDRINUSE.*|Error:.*EADDRINUSE|address already in use|server.*failed.*start"
+      confidence: 0.92
+    
+    secondary_patterns:
+      - regex: "app\\.listen\\(|server\\.listen\\("
+        weight: 0.6
+        proximity_window: 20
+      - regex: "EADDRINUSE|address already in use"
+        weight: 0.8
+        proximity_window: 10
+      - regex: "port.*\\d+|:\\d+"
+        weight: 0.4
+        proximity_window: 25
+    
+    severity: "CRITICAL"
+    category: ["server", "startup", "port_binding"]
+    
+    remediation:
+      description: "Express server failed to start and bind to port"
+      common_causes:
+        - "Port already in use by another process"
+        - "Insufficient permissions to bind to port"
+        - "Invalid port number or configuration"
+        - "Network interface binding issues"
+      
+      suggested_commands:
+        - "Check port usage: netstat -tulpn | grep :3000"
+        - "Kill process using port: lsof -ti:3000 | xargs kill -9"
+        - "Use different port: app.listen(3001)"
+        - "Use PORT environment variable: process.env.PORT || 3000"
+      
+      documentation_links:
+        - "https://expressjs.com/en/starter/hello-world.html"
+        - "https://nodejs.org/api/net.html#net_server_listen"
+    
+    context_extraction:
+      lines_before: 15
+      lines_after: 10
+
+  - id: "express_body_parser_error"
+    name: "Express Body Parser Error"
+    
+    primary_pattern:
+      regex: "SyntaxError.*Unexpected token.*in JSON|request entity too large|PayloadTooLargeError"
+      confidence: 0.88
+    
+    secondary_patterns:
+      - regex: "express\\.json\\(\\)|bodyParser"
+        weight: 0.6
+        proximity_window: 20
+      - regex: "JSON\\.parse|parse.*error"
+        weight: 0.5
+        proximity_window: 15
+      - regex: "Content-Type.*application/json"
+        weight: 0.4
+        proximity_window: 25
+    
+    severity: "MEDIUM"
+    category: ["parsing", "request_handling"]
+    
+    remediation:
+      description: "Express failed to parse request body"
+      common_causes:
+        - "Invalid JSON in request body"
+        - "Request body exceeds size limit"
+        - "Missing or incorrect Content-Type header"
+        - "Malformed request payload"
+      
+      suggested_commands:
+        - "Validate JSON format before sending request"
+        - "Increase body size limit: express.json({limit: '10mb'})"
+        - "Set proper Content-Type: application/json header"
+        - "Add error handling for body parsing"
+      
+      documentation_links:
+        - "https://expressjs.com/en/api.html#express.json"
+        - "https://github.com/expressjs/body-parser"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 8
+
+  - id: "express_cors_error"
+    name: "Express CORS Error"
+    
+    primary_pattern:
+      regex: "CORS.*error|Access.*Control.*Allow.*Origin|cross.*origin.*blocked|preflight.*failed"
+      confidence: 0.84
+    
+    secondary_patterns:
+      - regex: "cors\\(\\)|require.*cors"
+        weight: 0.6
+        proximity_window: 25
+      - regex: "OPTIONS.*request|preflight"
+        weight: 0.5
+        proximity_window: 20
+      - regex: "origin.*not.*allowed|blocked.*CORS"
+        weight: 0.7
+        proximity_window: 15
+    
+    severity: "MEDIUM"
+    category: ["cors", "security", "middleware"]
+    
+    remediation:
+      description: "CORS policy blocked the cross-origin request"
+      common_causes:
+        - "Origin not in allowed origins list"
+        - "Missing CORS middleware"
+        - "Preflight request handling issues"
+        - "Incorrect CORS configuration"
+      
+      suggested_commands:
+        - "Install and configure CORS: npm install cors"
+        - "Add CORS middleware: app.use(cors())"
+        - "Configure allowed origins: cors({origin: ['http://localhost:3000']})"
+        - "Handle preflight requests properly"
+      
+      documentation_links:
+        - "https://github.com/expressjs/cors"
+        - "https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS"
+    
+    context_extraction:
+      lines_before: 10
+      lines_after: 8
+
+  - id: "express_template_engine_error"
+    name: "Express Template Engine Error"
+    
+    primary_pattern:
+      regex: "Error.*view.*engine|template.*not.*found|Failed to lookup view|view.*render.*error"
+      confidence: 0.86
+    
+    secondary_patterns:
+      - regex: "app\\.set.*view.*engine|app\\.engine\\("
+        weight: 0.6
+        proximity_window: 25
+      - regex: "res\\.render\\(|render.*function"
+        weight: 0.7
+        proximity_window: 15
+      - regex: "ejs|handlebars|pug|mustache"
+        weight: 0.4
+        proximity_window: 30
+    
+    severity: "MEDIUM"
+    category: ["templates", "rendering"]
+    
+    remediation:
+      description: "Express template engine failed to render view"
+      common_causes:
+        - "Template file not found in views directory"
+        - "Template engine not properly configured"
+        - "Syntax errors in template files"
+        - "Missing template variables or data"
+      
+      suggested_commands:
+        - "Set views directory: app.set('views', './views')"
+        - "Configure template engine: app.set('view engine', 'ejs')"
+        - "Check template file exists in views directory"
+        - "Verify template syntax and variables"
+      
+      documentation_links:
+        - "https://expressjs.com/en/guide/using-template-engines.html"
+        - "https://expressjs.com/en/api.html#app.set"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 8
+
+  - id: "express_session_error"
+    name: "Express Session Error"
+    
+    primary_pattern:
+      regex: "session.*error|express-session.*error|MemoryStore.*warning|session.*store.*error"
+      confidence: 0.82
+    
+    secondary_patterns:
+      - regex: "express-session|session\\(\\{|require.*session"
+        weight: 0.6
+        proximity_window: 20
+      - regex: "MemoryStore|session.*store"
+        weight: 0.5
+        proximity_window: 25
+      - regex: "secret.*required|session.*secret"
+        weight: 0.7
+        proximity_window: 15
+    
+    severity: "MEDIUM"
+    category: ["session", "middleware"]
+    
+    remediation:
+      description: "Express session management encountered an error"
+      common_causes:
+        - "Missing session secret configuration"
+        - "Session store connection issues"
+        - "Memory store warnings in production"
+        - "Session data corruption or expiration"
+      
+      suggested_commands:
+        - "Set session secret: session({secret: 'your-secret-key'})"
+        - "Use production session store (Redis, MongoDB)"
+        - "Configure session options properly"
+        - "Handle session errors in middleware"
+      
+      documentation_links:
+        - "https://github.com/expressjs/session"
+        - "https://expressjs.com/en/resources/middleware/session.html"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 8
+
+  - id: "express_static_file_error"
+    name: "Express Static File Error"
+    
+    primary_pattern:
+      regex: "ENOENT.*no such file or directory.*static|static.*file.*not.*found|express\\.static.*error"
+      confidence: 0.83
+    
+    secondary_patterns:
+      - regex: "express\\.static\\(|app\\.use.*static"
+        weight: 0.7
+        proximity_window: 20
+      - regex: "public|assets|static"
+        weight: 0.4
+        proximity_window: 25
+      - regex: "ENOENT|no such file|file not found"
+        weight: 0.6
+        proximity_window: 15
+    
+    severity: "MEDIUM"
+    category: ["static_files", "file_system"]
+    
+    remediation:
+      description: "Express failed to serve static files"
+      common_causes:
+        - "Static directory does not exist"
+        - "Incorrect static directory path"
+        - "File permissions issues"
+        - "Missing static files or assets"
+      
+      suggested_commands:
+        - "Verify static directory exists: ls -la public/"
+        - "Check static path: app.use(express.static('public'))"
+        - "Set correct file permissions: chmod -R 755 public/"
+        - "Use absolute path: path.join(__dirname, 'public')"
+      
+      documentation_links:
+        - "https://expressjs.com/en/starter/static-files.html"
+        - "https://expressjs.com/en/api.html#express.static"
+    
+    context_extraction:
+      lines_before: 10
+      lines_after: 8
+
+  - id: "express_database_connection_error"
+    name: "Express Database Connection Error"
+    
+    primary_pattern:
+      regex: "ECONNREFUSED.*database|database.*connection.*failed|mongoose.*connection.*error|sequelize.*connection.*error"
+      confidence: 0.89
+    
+    secondary_patterns:
+      - regex: "mongoose|sequelize|mongodb|mysql|postgresql"
+        weight: 0.6
+        proximity_window: 25
+      - regex: "ECONNREFUSED|connection.*refused"
+        weight: 0.7
+        proximity_window: 15
+      - regex: "DATABASE_URL|db.*connect"
+        weight: 0.5
+        proximity_window: 20
+    
+    severity: "HIGH"
+    category: ["database", "connectivity"]
+    
+    remediation:
+      description: "Express application failed to connect to database"
+      common_causes:
+        - "Database server not running"
+        - "Invalid connection string or credentials"
+        - "Network connectivity issues"
+        - "Database server overloaded or unavailable"
+      
+      suggested_commands:
+        - "Check database server status"
+        - "Verify connection string and credentials"
+        - "Test network connectivity to database"
+        - "Add connection retry logic and error handling"
+      
+      documentation_links:
+        - "https://mongoosejs.com/docs/connections.html"
+        - "https://sequelize.org/docs/v6/getting-started/"
+    
+    context_extraction:
+      lines_before: 15
+      lines_after: 10
+      include_stack_trace: true
+
+related_patterns:
+  - id: "express_middleware_error"
+    related_to: ["express_cors_error", "express_session_error"]
+  - id: "express_server_startup_error"
+    related_to: ["express_database_connection_error"]
+  - id: "express_body_parser_error"
+    related_to: ["express_middleware_error"]
+  - id: "express_template_engine_error"
+    related_to: ["express_static_file_error"]

@@ -1,0 +1,419 @@
+metadata:
+  library_id: "hapi-core-patterns"
+  version: "1.0.0"
+  maintainer: "podmortem-community"
+  compatibility: ["hapi-20.x", "hapi-21.x"]
+  dependencies: []
+
+categories:
+  - web_framework
+  - plugins
+  - validation
+  - authentication
+  - caching
+  - lifecycle
+
+patterns:
+  - id: "hapi_plugin_registration_error"
+    name: "Hapi Plugin Registration Error"
+    
+    primary_pattern:
+      regex: "Plugin.*registration.*failed|register.*plugin.*error|plugin.*load.*error|plugin.*dependency.*error"
+      confidence: 0.90
+    
+    secondary_patterns:
+      - regex: "server\\.register\\(|await.*register\\("
+        weight: 0.7
+        proximity_window: 15
+      - regex: "plugin.*options|plugin.*dependencies"
+        weight: 0.6
+        proximity_window: 20
+      - regex: "hapi.*plugin|plugin.*exports"
+        weight: 0.5
+        proximity_window: 25
+    
+    severity: "HIGH"
+    category: ["plugins", "registration"]
+    
+    remediation:
+      description: "Hapi plugin registration failed during server startup"
+      common_causes:
+        - "Plugin dependency not found or incompatible"
+        - "Plugin registration function throws exception"
+        - "Invalid plugin configuration or options"
+        - "Plugin version compatibility issues"
+      
+      suggested_commands:
+        - "Check plugin dependencies and versions"
+        - "Validate plugin registration function"
+        - "Review plugin configuration options"
+        - "Ensure plugin exports are correct"
+      
+      documentation_links:
+        - "https://hapi.dev/tutorials/plugins/"
+        - "https://hapi.dev/api/#server.register()"
+    
+    context_extraction:
+      lines_before: 15
+      lines_after: 12
+      include_stack_trace: true
+
+  - id: "hapi_validation_error"
+    name: "Hapi Validation Error"
+    
+    primary_pattern:
+      regex: "ValidationError|validation.*failed|Joi.*validation.*error|payload.*validation.*error"
+      confidence: 0.88
+    
+    secondary_patterns:
+      - regex: "Joi\\.|@hapi/joi|joi.*schema"
+        weight: 0.7
+        proximity_window: 15
+      - regex: "validate.*payload|validate.*query|validate.*params"
+        weight: 0.6
+        proximity_window: 20
+      - regex: "400.*Bad.*Request|validation.*details"
+        weight: 0.5
+        proximity_window: 25
+    
+    severity: "MEDIUM"
+    category: ["validation", "joi"]
+    
+    remediation:
+      description: "Hapi request validation failed using Joi schema"
+      common_causes:
+        - "Request data doesn't match Joi schema"
+        - "Missing required fields in request"
+        - "Invalid data types or constraints"
+        - "Schema definition errors"
+      
+      suggested_commands:
+        - "Check request data against Joi schema definition"
+        - "Ensure all required fields are provided"
+        - "Validate Joi schema constraints and types"
+        - "Review validation configuration in route options"
+      
+      documentation_links:
+        - "https://hapi.dev/tutorials/validation/"
+        - "https://joi.dev/api/"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 8
+      include_stack_trace: true
+
+  - id: "hapi_route_handler_error"
+    name: "Hapi Route Handler Error"
+    
+    primary_pattern:
+      regex: "handler.*error|route.*handler.*failed|handler.*function.*error|request.*handler.*error"
+      confidence: 0.87
+    
+    secondary_patterns:
+      - regex: "server\\.route\\(|handler.*function|async.*handler"
+        weight: 0.7
+        proximity_window: 15
+      - regex: "request.*object|h\\.response\\(|h\\.redirect\\("
+        weight: 0.6
+        proximity_window: 20
+      - regex: "500.*Internal.*Server.*Error|handler.*exception"
+        weight: 0.5
+        proximity_window: 25
+    
+    severity: "HIGH"
+    category: ["handlers", "routes"]
+    
+    remediation:
+      description: "Hapi route handler encountered an error during request processing"
+      common_causes:
+        - "Unhandled exception in handler function"
+        - "Invalid response object or status code"
+        - "Async handler not properly awaited"
+        - "Handler function logic errors"
+      
+      suggested_commands:
+        - "Add try/catch blocks in route handlers"
+        - "Ensure proper response object creation"
+        - "Check async handler implementations"
+        - "Validate handler function return values"
+      
+      documentation_links:
+        - "https://hapi.dev/tutorials/routing/"
+        - "https://hapi.dev/api/#route-handler"
+    
+    context_extraction:
+      lines_before: 15
+      lines_after: 12
+      include_stack_trace: true
+
+  - id: "hapi_authentication_error"
+    name: "Hapi Authentication Error"
+    
+    primary_pattern:
+      regex: "authentication.*failed|401.*Unauthorized|auth.*strategy.*error|authentication.*scheme.*error"
+      confidence: 0.85
+    
+    secondary_patterns:
+      - regex: "server\\.auth\\.strategy\\(|auth.*scheme"
+        weight: 0.7
+        proximity_window: 20
+      - regex: "Bearer.*token|JWT.*token|session.*auth"
+        weight: 0.6
+        proximity_window: 15
+      - regex: "credentials.*invalid|auth.*validate"
+        weight: 0.5
+        proximity_window: 25
+    
+    severity: "MEDIUM"
+    category: ["authentication", "security"]
+    
+    remediation:
+      description: "Hapi authentication strategy failed to authenticate request"
+      common_causes:
+        - "Invalid or expired authentication credentials"
+        - "Authentication strategy not properly configured"
+        - "Missing authentication headers or tokens"
+        - "Authentication validation function errors"
+      
+      suggested_commands:
+        - "Check authentication credentials validity"
+        - "Verify authentication strategy configuration"
+        - "Ensure proper authentication headers"
+        - "Review authentication validation logic"
+      
+      documentation_links:
+        - "https://hapi.dev/tutorials/auth/"
+        - "https://hapi.dev/api/#server.auth.strategy()"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 10
+      include_stack_trace: true
+
+  - id: "hapi_server_startup_error"
+    name: "Hapi Server Startup Error"
+    
+    primary_pattern:
+      regex: "server.*start.*failed|listen.*EADDRINUSE|server.*initialization.*error|start.*server.*error"
+      confidence: 0.92
+    
+    secondary_patterns:
+      - regex: "server\\.start\\(|await.*start\\(\\)"
+        weight: 0.7
+        proximity_window: 15
+      - regex: "EADDRINUSE|address.*already.*in.*use"
+        weight: 0.8
+        proximity_window: 10
+      - regex: "port.*\\d+|host.*address"
+        weight: 0.4
+        proximity_window: 25
+    
+    severity: "CRITICAL"
+    category: ["server", "startup"]
+    
+    remediation:
+      description: "Hapi server failed to start and bind to specified address/port"
+      common_causes:
+        - "Port already in use by another process"
+        - "Invalid server configuration"
+        - "Plugin initialization failures"
+        - "Network binding permissions issues"
+      
+      suggested_commands:
+        - "Check port usage: netstat -tulpn | grep :3000"
+        - "Kill process using port: lsof -ti:3000 | xargs kill -9"
+        - "Use different port in server configuration"
+        - "Check server initialization and plugin loading"
+      
+      documentation_links:
+        - "https://hapi.dev/tutorials/gettingstarted/"
+        - "https://hapi.dev/api/#server.start()"
+    
+    context_extraction:
+      lines_before: 15
+      lines_after: 10
+
+  - id: "hapi_cache_error"
+    name: "Hapi Cache Error"
+    
+    primary_pattern:
+      regex: "cache.*error|catbox.*error|cache.*connection.*failed|cache.*strategy.*error"
+      confidence: 0.83
+    
+    secondary_patterns:
+      - regex: "server\\.cache\\(|catbox.*redis|catbox.*memory"
+        weight: 0.7
+        proximity_window: 20
+      - regex: "cache.*get|cache.*set|cache.*drop"
+        weight: 0.6
+        proximity_window: 15
+      - regex: "redis.*connection|memory.*cache"
+        weight: 0.5
+        proximity_window: 25
+    
+    severity: "MEDIUM"
+    category: ["caching", "performance"]
+    
+    remediation:
+      description: "Hapi cache operation failed"
+      common_causes:
+        - "Cache backend connection issues (Redis, Memory)"
+        - "Cache configuration errors"
+        - "Cache key or value serialization problems"
+        - "Cache strategy implementation errors"
+      
+      suggested_commands:
+        - "Check cache backend connectivity"
+        - "Validate cache configuration options"
+        - "Review cache key and value formats"
+        - "Test cache strategy implementation"
+      
+      documentation_links:
+        - "https://hapi.dev/tutorials/caching/"
+        - "https://github.com/hapijs/catbox"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 8
+
+  - id: "hapi_lifecycle_error"
+    name: "Hapi Request Lifecycle Error"
+    
+    primary_pattern:
+      regex: "lifecycle.*error|extension.*error|onRequest.*error|onPreHandler.*error|onPostHandler.*error"
+      confidence: 0.84
+    
+    secondary_patterns:
+      - regex: "server\\.ext\\(|ext.*function"
+        weight: 0.7
+        proximity_window: 15
+      - regex: "onRequest|onPreAuth|onCredentials|onPostAuth"
+        weight: 0.6
+        proximity_window: 20
+      - regex: "onPreHandler|onPostHandler|onPreResponse"
+        weight: 0.6
+        proximity_window: 20
+    
+    severity: "HIGH"
+    category: ["lifecycle", "extensions"]
+    
+    remediation:
+      description: "Hapi request lifecycle extension encountered an error"
+      common_causes:
+        - "Extension function throws unhandled exception"
+        - "Invalid extension point configuration"
+        - "Extension function modifies request/response incorrectly"
+        - "Async extension not properly handled"
+      
+      suggested_commands:
+        - "Add error handling in extension functions"
+        - "Verify extension point registration"
+        - "Check request/response modifications"
+        - "Ensure async extensions are properly awaited"
+      
+      documentation_links:
+        - "https://hapi.dev/api/#server.ext()"
+        - "https://hapi.dev/api/#request-lifecycle"
+    
+    context_extraction:
+      lines_before: 15
+      lines_after: 10
+      include_stack_trace: true
+
+  - id: "hapi_payload_error"
+    name: "Hapi Payload Processing Error"
+    
+    primary_pattern:
+      regex: "payload.*too.*large|payload.*processing.*error|request.*entity.*too.*large|multipart.*error"
+      confidence: 0.86
+    
+    secondary_patterns:
+      - regex: "payload.*maxBytes|payload.*parse"
+        weight: 0.6
+        proximity_window: 20
+      - regex: "multipart.*form|application.*json|request.*body"
+        weight: 0.5
+        proximity_window: 25
+      - regex: "413.*Payload.*Too.*Large|payload.*limit"
+        weight: 0.7
+        proximity_window: 15
+    
+    severity: "MEDIUM"
+    category: ["payload", "parsing"]
+    
+    remediation:
+      description: "Hapi failed to process request payload"
+      common_causes:
+        - "Request payload exceeds configured size limits"
+        - "Invalid payload format or encoding"
+        - "Multipart form data processing errors"
+        - "Payload parsing configuration issues"
+      
+      suggested_commands:
+        - "Increase payload size limits in route config"
+        - "Validate payload format and encoding"
+        - "Check multipart form data structure"
+        - "Review payload parsing configuration"
+      
+      documentation_links:
+        - "https://hapi.dev/api/#route.options.payload"
+        - "https://hapi.dev/tutorials/serving-files/"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 8
+
+  - id: "hapi_response_error"
+    name: "Hapi Response Processing Error"
+    
+    primary_pattern:
+      regex: "response.*processing.*error|response.*serialization.*error|response.*timeout|h\\.response.*error"
+      confidence: 0.82
+    
+    secondary_patterns:
+      - regex: "h\\.response\\(|response.*toolkit"
+        weight: 0.7
+        proximity_window: 15
+      - regex: "JSON\\.stringify|response.*headers"
+        weight: 0.5
+        proximity_window: 20
+      - regex: "response.*code|response.*type"
+        weight: 0.6
+        proximity_window: 25
+    
+    severity: "MEDIUM"
+    category: ["response", "serialization"]
+    
+    remediation:
+      description: "Hapi response processing or serialization failed"
+      common_causes:
+        - "Response data serialization errors"
+        - "Invalid response headers or status codes"
+        - "Response toolkit usage errors"
+        - "Circular references in response data"
+      
+      suggested_commands:
+        - "Check response data for circular references"
+        - "Validate response headers and status codes"
+        - "Review response toolkit usage"
+        - "Test response serialization manually"
+      
+      documentation_links:
+        - "https://hapi.dev/api/#response-toolkit"
+        - "https://hapi.dev/api/#response-object"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 8
+
+related_patterns:
+  - id: "hapi_plugin_registration_error"
+    related_to: ["hapi_server_startup_error"]
+  - id: "hapi_validation_error"
+    related_to: ["hapi_payload_error"]
+  - id: "hapi_route_handler_error"
+    related_to: ["hapi_response_error", "hapi_lifecycle_error"]
+  - id: "hapi_authentication_error"
+    related_to: ["hapi_lifecycle_error"]
+  - id: "hapi_cache_error"
+    related_to: ["hapi_server_startup_error"]

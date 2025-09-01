@@ -1,0 +1,414 @@
+metadata:
+  library_id: "koa-core-patterns"
+  version: "1.0.0"
+  maintainer: "podmortem-community"
+  compatibility: ["koa-2.x"]
+  dependencies: []
+
+categories:
+  - web_framework
+  - middleware
+  - async_await
+  - context
+  - error_handling
+  - generators
+
+patterns:
+  - id: "koa_middleware_error"
+    name: "Koa Middleware Error"
+    
+    primary_pattern:
+      regex: "middleware.*error|Koa.*middleware.*failed|async.*middleware.*error|middleware.*stack.*error"
+      confidence: 0.88
+    
+    secondary_patterns:
+      - regex: "app\\.use\\(|koa.*middleware"
+        weight: 0.6
+        proximity_window: 20
+      - regex: "async.*function.*ctx.*next|await.*next\\(\\)"
+        weight: 0.7
+        proximity_window: 15
+      - regex: "ctx\\.state|ctx\\.request|ctx\\.response"
+        weight: 0.5
+        proximity_window: 25
+    
+    severity: "HIGH"
+    category: ["middleware", "async"]
+    
+    remediation:
+      description: "Koa middleware encountered an error during request processing"
+      common_causes:
+        - "Unhandled exception in middleware function"
+        - "Middleware not properly awaiting next()"
+        - "Context object modification errors"
+        - "Async/await chain interruption"
+      
+      suggested_commands:
+        - "Add try/catch blocks in middleware functions"
+        - "Ensure all middleware properly awaits next()"
+        - "Check context object modifications"
+        - "Review middleware execution order"
+      
+      documentation_links:
+        - "https://koajs.com/#middleware"
+        - "https://github.com/koajs/koa/blob/master/docs/guide.md"
+    
+    context_extraction:
+      lines_before: 15
+      lines_after: 12
+      include_stack_trace: true
+
+  - id: "koa_context_error"
+    name: "Koa Context Error"
+    
+    primary_pattern:
+      regex: "ctx.*error|context.*error|Cannot.*set.*property.*ctx|ctx.*undefined"
+      confidence: 0.85
+    
+    secondary_patterns:
+      - regex: "ctx\\.body|ctx\\.status|ctx\\.headers"
+        weight: 0.7
+        proximity_window: 15
+      - regex: "ctx\\.request|ctx\\.response|ctx\\.state"
+        weight: 0.6
+        proximity_window: 20
+      - regex: "context.*object|koa.*context"
+        weight: 0.5
+        proximity_window: 25
+    
+    severity: "MEDIUM"
+    category: ["context", "request_handling"]
+    
+    remediation:
+      description: "Koa context object manipulation failed"
+      common_causes:
+        - "Attempting to modify read-only context properties"
+        - "Context object accessed outside middleware chain"
+        - "Invalid context property assignments"
+        - "Context state corruption"
+      
+      suggested_commands:
+        - "Check context property access and modification"
+        - "Ensure context is used within middleware scope"
+        - "Validate context state assignments"
+        - "Review context object lifecycle"
+      
+      documentation_links:
+        - "https://koajs.com/#context"
+        - "https://github.com/koajs/koa/blob/master/docs/api/context.md"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 8
+
+  - id: "koa_async_await_error"
+    name: "Koa Async/Await Error"
+    
+    primary_pattern:
+      regex: "async.*await.*error|Promise.*rejection.*koa|await.*next.*error|async.*function.*error"
+      confidence: 0.87
+    
+    secondary_patterns:
+      - regex: "async.*function|await.*next\\(\\)"
+        weight: 0.7
+        proximity_window: 15
+      - regex: "Promise.*reject|UnhandledPromiseRejectionWarning"
+        weight: 0.6
+        proximity_window: 20
+      - regex: "generator.*function|yield.*next"
+        weight: 0.4
+        proximity_window: 25
+    
+    severity: "HIGH"
+    category: ["async", "promises"]
+    
+    remediation:
+      description: "Koa async/await operation failed in middleware chain"
+      common_causes:
+        - "Unhandled promise rejection in middleware"
+        - "Incorrect async/await usage in middleware"
+        - "Missing await for next() function"
+        - "Promise chain interruption"
+      
+      suggested_commands:
+        - "Add proper error handling for async operations"
+        - "Ensure all middleware functions are properly async"
+        - "Always await next() in middleware"
+        - "Use try/catch blocks around async operations"
+      
+      documentation_links:
+        - "https://koajs.com/#async-functions"
+        - "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function"
+    
+    context_extraction:
+      lines_before: 15
+      lines_after: 10
+      include_stack_trace: true
+
+  - id: "koa_router_error"
+    name: "Koa Router Error"
+    
+    primary_pattern:
+      regex: "Router.*error|koa-router.*error|route.*not.*found|router.*middleware.*error"
+      confidence: 0.84
+    
+    secondary_patterns:
+      - regex: "@koa/router|koa-router|Router\\(\\)"
+        weight: 0.7
+        proximity_window: 20
+      - regex: "router\\.get\\(|router\\.post\\(|router\\.routes\\(\\)"
+        weight: 0.6
+        proximity_window: 15
+      - regex: "404.*Not.*Found|route.*matching"
+        weight: 0.5
+        proximity_window: 25
+    
+    severity: "MEDIUM"
+    category: ["routing", "middleware"]
+    
+    remediation:
+      description: "Koa router encountered an error during route processing"
+      common_causes:
+        - "Route handler throwing unhandled exception"
+        - "Router middleware not properly registered"
+        - "Route path pattern matching issues"
+        - "Missing route definitions"
+      
+      suggested_commands:
+        - "Add error handling in route handlers"
+        - "Ensure router middleware is registered: app.use(router.routes())"
+        - "Check route path patterns and parameters"
+        - "Add allowedMethods middleware: app.use(router.allowedMethods())"
+      
+      documentation_links:
+        - "https://github.com/koajs/router"
+        - "https://github.com/ZijianHe/koa-router"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 8
+
+  - id: "koa_body_parser_error"
+    name: "Koa Body Parser Error"
+    
+    primary_pattern:
+      regex: "body.*parser.*error|koa-body.*error|request.*body.*parse.*error|multipart.*parse.*error"
+      confidence: 0.86
+    
+    secondary_patterns:
+      - regex: "koa-body|koa-bodyparser|@koa/bodyparser"
+        weight: 0.7
+        proximity_window: 20
+      - regex: "ctx\\.request\\.body|request.*body"
+        weight: 0.6
+        proximity_window: 15
+      - regex: "JSON\\.parse|multipart.*form|urlencoded"
+        weight: 0.5
+        proximity_window: 25
+    
+    severity: "MEDIUM"
+    category: ["parsing", "request_handling"]
+    
+    remediation:
+      description: "Koa body parser failed to parse request body"
+      common_causes:
+        - "Invalid JSON in request body"
+        - "Request body exceeds size limits"
+        - "Unsupported content type"
+        - "Malformed multipart form data"
+      
+      suggested_commands:
+        - "Validate JSON format before sending request"
+        - "Configure body parser limits properly"
+        - "Check Content-Type header matches body format"
+        - "Add error handling for body parsing middleware"
+      
+      documentation_links:
+        - "https://github.com/koajs/bodyparser"
+        - "https://github.com/dlau/koa-body"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 8
+
+  - id: "koa_static_file_error"
+    name: "Koa Static File Error"
+    
+    primary_pattern:
+      regex: "static.*file.*error|koa-static.*error|ENOENT.*static|file.*not.*found.*static"
+      confidence: 0.83
+    
+    secondary_patterns:
+      - regex: "koa-static|@koa/static|static.*middleware"
+        weight: 0.7
+        proximity_window: 20
+      - regex: "public|assets|static.*directory"
+        weight: 0.5
+        proximity_window: 25
+      - regex: "ENOENT|file.*not.*found|no.*such.*file"
+        weight: 0.6
+        proximity_window: 15
+    
+    severity: "MEDIUM"
+    category: ["static_files", "file_system"]
+    
+    remediation:
+      description: "Koa static file serving failed"
+      common_causes:
+        - "Static directory does not exist"
+        - "File not found in static directory"
+        - "Incorrect static directory path"
+        - "File permissions issues"
+      
+      suggested_commands:
+        - "Verify static directory exists and is readable"
+        - "Check static file paths and names"
+        - "Configure static middleware: app.use(serve('public'))"
+        - "Set correct file permissions: chmod -R 755 public/"
+      
+      documentation_links:
+        - "https://github.com/koajs/static"
+        - "https://koajs.com/#static-file-serving"
+    
+    context_extraction:
+      lines_before: 10
+      lines_after: 8
+
+  - id: "koa_cors_error"
+    name: "Koa CORS Error"
+    
+    primary_pattern:
+      regex: "CORS.*error|@koa/cors.*error|cross.*origin.*blocked|Access.*Control.*Allow.*Origin"
+      confidence: 0.82
+    
+    secondary_patterns:
+      - regex: "@koa/cors|koa2-cors|cors.*middleware"
+        weight: 0.7
+        proximity_window: 20
+      - regex: "preflight.*request|OPTIONS.*request"
+        weight: 0.5
+        proximity_window: 25
+      - regex: "origin.*not.*allowed|CORS.*policy"
+        weight: 0.6
+        proximity_window: 15
+    
+    severity: "MEDIUM"
+    category: ["cors", "security"]
+    
+    remediation:
+      description: "Koa CORS policy blocked the cross-origin request"
+      common_causes:
+        - "Origin not in allowed origins list"
+        - "Missing CORS middleware configuration"
+        - "Preflight request handling issues"
+        - "Incorrect CORS headers setup"
+      
+      suggested_commands:
+        - "Configure CORS middleware: app.use(cors())"
+        - "Set allowed origins: cors({origin: ['http://localhost:3000']})"
+        - "Handle preflight requests properly"
+        - "Check CORS configuration options"
+      
+      documentation_links:
+        - "https://github.com/koajs/cors"
+        - "https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS"
+    
+    context_extraction:
+      lines_before: 10
+      lines_after: 8
+
+  - id: "koa_session_error"
+    name: "Koa Session Error"
+    
+    primary_pattern:
+      regex: "session.*error|koa-session.*error|session.*store.*error|session.*middleware.*error"
+      confidence: 0.81
+    
+    secondary_patterns:
+      - regex: "koa-session|@koa/session|session.*middleware"
+        weight: 0.7
+        proximity_window: 20
+      - regex: "ctx\\.session|session.*store"
+        weight: 0.6
+        proximity_window: 15
+      - regex: "session.*key|session.*secret"
+        weight: 0.5
+        proximity_window: 25
+    
+    severity: "MEDIUM"
+    category: ["session", "middleware"]
+    
+    remediation:
+      description: "Koa session management encountered an error"
+      common_causes:
+        - "Session store connection issues"
+        - "Missing session configuration"
+        - "Session key or secret not set"
+        - "Session data corruption"
+      
+      suggested_commands:
+        - "Configure session keys: app.keys = ['secret1', 'secret2']"
+        - "Set up session middleware properly"
+        - "Check session store connectivity"
+        - "Validate session configuration options"
+      
+      documentation_links:
+        - "https://github.com/koajs/session"
+        - "https://koajs.com/#sessions"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 8
+
+  - id: "koa_server_error"
+    name: "Koa Server Error"
+    
+    primary_pattern:
+      regex: "listen.*EADDRINUSE|server.*error|koa.*server.*failed|app\\.listen.*error"
+      confidence: 0.90
+    
+    secondary_patterns:
+      - regex: "app\\.listen\\(|server\\.listen\\("
+        weight: 0.7
+        proximity_window: 15
+      - regex: "EADDRINUSE|address.*already.*in.*use"
+        weight: 0.8
+        proximity_window: 10
+      - regex: "port.*\\d+|:\\d+"
+        weight: 0.4
+        proximity_window: 25
+    
+    severity: "CRITICAL"
+    category: ["server", "startup"]
+    
+    remediation:
+      description: "Koa server failed to start or bind to port"
+      common_causes:
+        - "Port already in use by another process"
+        - "Invalid port or host configuration"
+        - "Insufficient permissions to bind port"
+        - "Server initialization errors"
+      
+      suggested_commands:
+        - "Check port usage: netstat -tulpn | grep :3000"
+        - "Kill process using port: lsof -ti:3000 | xargs kill -9"
+        - "Use different port: app.listen(3001)"
+        - "Check server configuration and permissions"
+      
+      documentation_links:
+        - "https://koajs.com/#application"
+        - "https://nodejs.org/api/http.html#http_server_listen"
+    
+    context_extraction:
+      lines_before: 15
+      lines_after: 10
+
+related_patterns:
+  - id: "koa_middleware_error"
+    related_to: ["koa_async_await_error", "koa_context_error"]
+  - id: "koa_router_error"
+    related_to: ["koa_middleware_error"]
+  - id: "koa_body_parser_error"
+    related_to: ["koa_middleware_error"]
+  - id: "koa_async_await_error"
+    related_to: ["koa_context_error"]

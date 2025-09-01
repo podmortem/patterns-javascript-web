@@ -1,0 +1,386 @@
+metadata:
+  library_id: "javascript-core-patterns"
+  version: "1.0.0"
+  maintainer: "podmortem-community"
+  compatibility: ["node-14+", "node-16+", "node-18+", "node-20+"]
+  dependencies: []
+
+categories:
+  - javascript_runtime
+  - error_handling
+  - async_programming
+  - memory_management
+  - syntax_errors
+  - type_errors
+
+patterns:
+  - id: "javascript_syntax_error"
+    name: "JavaScript Syntax Error"
+    
+    primary_pattern:
+      regex: "SyntaxError:.*|Unexpected token.*|Unexpected end of input"
+      confidence: 0.95
+    
+    secondary_patterns:
+      - regex: "at line \\d+|at column \\d+"
+        weight: 0.5
+        proximity_window: 10
+      - regex: "Unexpected token '.*'|missing .*before"
+        weight: 0.6
+        proximity_window: 15
+      - regex: "Invalid or unexpected token"
+        weight: 0.4
+        proximity_window: 20
+    
+    severity: "HIGH"
+    category: ["syntax", "compilation"]
+    
+    remediation:
+      description: "JavaScript syntax error preventing code execution"
+      common_causes:
+        - "Missing or extra parentheses, brackets, or braces"
+        - "Missing semicolons or commas"
+        - "Invalid character or token usage"
+        - "Incorrect string literal formatting"
+      
+      suggested_commands:
+        - "Check for matching brackets and parentheses"
+        - "Validate string quotes and escaping"
+        - "Use a linter like ESLint to catch syntax issues"
+        - "Review code around the reported line number"
+      
+      documentation_links:
+        - "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors"
+        - "https://eslint.org/docs/latest/"
+    
+    context_extraction:
+      lines_before: 8
+      lines_after: 5
+      highlight_keywords: ["SyntaxError", "Unexpected", "token"]
+
+  - id: "javascript_reference_error"
+    name: "JavaScript Reference Error"
+    
+    primary_pattern:
+      regex: "ReferenceError:.*is not defined|ReferenceError:.*Cannot access.*before initialization"
+      confidence: 0.92
+    
+    secondary_patterns:
+      - regex: "is not defined|not defined"
+        weight: 0.7
+        proximity_window: 10
+      - regex: "Cannot access.*before initialization"
+        weight: 0.6
+        proximity_window: 15
+      - regex: "Identifier.*has already been declared"
+        weight: 0.5
+        proximity_window: 20
+    
+    severity: "HIGH"
+    category: ["scope", "variables"]
+    
+    remediation:
+      description: "Variable or function referenced before declaration or out of scope"
+      common_causes:
+        - "Using variable before declaration"
+        - "Typo in variable or function name"
+        - "Variable not in scope"
+        - "Temporal dead zone with let/const"
+      
+      suggested_commands:
+        - "Check variable spelling and declaration"
+        - "Ensure variables are declared before use"
+        - "Review variable scope and hoisting rules"
+        - "Use const/let instead of var for block scoping"
+      
+      documentation_links:
+        - "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Not_defined"
+        - "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Grammar_and_types#Variable_hoisting"
+    
+    context_extraction:
+      lines_before: 10
+      lines_after: 8
+      include_stack_trace: true
+
+  - id: "javascript_type_error"
+    name: "JavaScript Type Error"
+    
+    primary_pattern:
+      regex: "TypeError:.*is not a function|TypeError:.*Cannot read propert.*of.*|TypeError:.*Cannot set propert.*of.*"
+      confidence: 0.90
+    
+    secondary_patterns:
+      - regex: "is not a function|not a function"
+        weight: 0.7
+        proximity_window: 12
+      - regex: "Cannot read propert.*of undefined|Cannot read propert.*of null"
+        weight: 0.8
+        proximity_window: 15
+      - regex: "Cannot set propert.*of undefined|Cannot set propert.*of null"
+        weight: 0.6
+        proximity_window: 15
+    
+    severity: "HIGH"
+    category: ["types", "runtime"]
+    
+    remediation:
+      description: "Operation performed on incompatible data type"
+      common_causes:
+        - "Calling undefined or null as function"
+        - "Accessing properties of undefined/null objects"
+        - "Type mismatch in operations"
+        - "Incorrect API usage"
+      
+      suggested_commands:
+        - "Add null/undefined checks before property access"
+        - "Use optional chaining (?.) for safe property access"
+        - "Validate function existence before calling"
+        - "Use TypeScript for better type safety"
+      
+      documentation_links:
+        - "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Not_a_function"
+        - "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining"
+    
+    context_extraction:
+      lines_before: 12
+      lines_after: 10
+      include_stack_trace: true
+
+  - id: "javascript_range_error"
+    name: "JavaScript Range Error"
+    
+    primary_pattern:
+      regex: "RangeError:.*Maximum call stack size exceeded|RangeError:.*Invalid array length|RangeError:.*too much recursion"
+      confidence: 0.88
+    
+    secondary_patterns:
+      - regex: "Maximum call stack size exceeded|call stack size exceeded"
+        weight: 0.8
+        proximity_window: 10
+      - regex: "Invalid array length|array length"
+        weight: 0.6
+        proximity_window: 15
+      - regex: "too much recursion|recursion"
+        weight: 0.7
+        proximity_window: 20
+    
+    severity: "CRITICAL"
+    category: ["memory", "recursion"]
+    
+    remediation:
+      description: "Value outside allowable range or excessive recursion"
+      common_causes:
+        - "Infinite recursion without base case"
+        - "Creating arrays with negative or extremely large lengths"
+        - "Deep function call chains"
+        - "Circular reference loops"
+      
+      suggested_commands:
+        - "Add base case to recursive functions"
+        - "Validate array length before creation"
+        - "Use iterative solutions instead of deep recursion"
+        - "Check for circular references in data structures"
+      
+      documentation_links:
+        - "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Too_much_recursion"
+        - "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RangeError"
+    
+    context_extraction:
+      lines_before: 15
+      lines_after: 12
+      include_stack_trace: true
+
+  - id: "javascript_unhandled_promise_rejection"
+    name: "Unhandled Promise Rejection"
+    
+    primary_pattern:
+      regex: "UnhandledPromiseRejectionWarning|Unhandled promise rejection|unhandledRejection"
+      confidence: 0.94
+    
+    secondary_patterns:
+      - regex: "Promise.*reject|rejection.*id"
+        weight: 0.6
+        proximity_window: 20
+      - regex: "async.*await|Promise\\.all|Promise\\.race"
+        weight: 0.4
+        proximity_window: 25
+      - regex: "DeprecationWarning.*unhandled.*promise"
+        weight: 0.5
+        proximity_window: 30
+    
+    severity: "HIGH"
+    category: ["async", "promises"]
+    
+    remediation:
+      description: "Promise rejection not properly handled"
+      common_causes:
+        - "Missing .catch() handler on promises"
+        - "Unhandled async/await errors"
+        - "Error thrown in async function without try/catch"
+        - "Promise rejection in event handlers"
+      
+      suggested_commands:
+        - "Add .catch() handlers to all promises"
+        - "Wrap async/await in try/catch blocks"
+        - "Use process.on('unhandledRejection') for global handling"
+        - "Add error handling to async event listeners"
+      
+      documentation_links:
+        - "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises"
+        - "https://nodejs.org/api/process.html#process_event_unhandledrejection"
+    
+    context_extraction:
+      lines_before: 15
+      lines_after: 10
+      include_stack_trace: true
+    
+    sequence_patterns:
+      - description: "Sequence of promise rejection events"
+        bonus_multiplier: 0.4
+        events:
+          - regex: "Promise.*created|async.*function.*called"
+            max_time_before: "2s"
+          - regex: "UnhandledPromiseRejectionWarning|unhandledRejection"
+            max_time_before: "1s"
+
+  - id: "javascript_uri_error"
+    name: "JavaScript URI Error"
+    
+    primary_pattern:
+      regex: "URIError:.*URI malformed|URIError:.*malformed URI sequence"
+      confidence: 0.85
+    
+    secondary_patterns:
+      - regex: "decodeURIComponent|encodeURIComponent"
+        weight: 0.6
+        proximity_window: 15
+      - regex: "decodeURI|encodeURI"
+        weight: 0.5
+        proximity_window: 15
+      - regex: "malformed.*URI|URI.*malformed"
+        weight: 0.7
+        proximity_window: 10
+    
+    severity: "MEDIUM"
+    category: ["encoding", "uri"]
+    
+    remediation:
+      description: "Invalid URI encoding or decoding operation"
+      common_causes:
+        - "Invalid percent-encoded sequences"
+        - "Malformed URI components"
+        - "Incorrect use of URI encoding functions"
+        - "Invalid characters in URI"
+      
+      suggested_commands:
+        - "Validate URI format before encoding/decoding"
+        - "Use try/catch around URI operations"
+        - "Check for invalid percent-encoded sequences"
+        - "Use proper URI encoding for special characters"
+      
+      documentation_links:
+        - "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/URIError"
+        - "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent"
+    
+    context_extraction:
+      lines_before: 8
+      lines_after: 5
+
+  - id: "javascript_memory_error"
+    name: "JavaScript Memory Error"
+    
+    primary_pattern:
+      regex: "FATAL ERROR:.*Reached heap limit|FATAL ERROR:.*Ineffective mark-compacts|JavaScript heap out of memory"
+      confidence: 0.96
+    
+    secondary_patterns:
+      - regex: "heap.*limit|heap.*memory"
+        weight: 0.7
+        proximity_window: 15
+      - regex: "mark-compacts.*near.*heap.*limit"
+        weight: 0.8
+        proximity_window: 20
+      - regex: "Allocation failed|OutOfMemoryError"
+        weight: 0.6
+        proximity_window: 25
+    
+    severity: "CRITICAL"
+    category: ["memory", "performance"]
+    
+    remediation:
+      description: "JavaScript runtime ran out of heap memory"
+      common_causes:
+        - "Memory leaks in application code"
+        - "Large data structures or arrays"
+        - "Insufficient heap size configuration"
+        - "Circular references preventing garbage collection"
+      
+      suggested_commands:
+        - "Increase heap size: node --max-old-space-size=4096"
+        - "Profile memory usage with heap snapshots"
+        - "Check for memory leaks and circular references"
+        - "Optimize data structures and algorithms"
+      
+      documentation_links:
+        - "https://nodejs.org/api/cli.html#cli_max_old_space_size_size_in_megabytes"
+        - "https://developer.chrome.com/docs/devtools/memory/"
+    
+    context_extraction:
+      lines_before: 20
+      lines_after: 15
+      include_stack_trace: true
+
+  - id: "javascript_security_error"
+    name: "JavaScript Security Error"
+    
+    primary_pattern:
+      regex: "SecurityError:.*Blocked.*frame.*origin|SecurityError:.*Permission denied|CORS.*error"
+      confidence: 0.87
+    
+    secondary_patterns:
+      - regex: "cross-origin|same-origin"
+        weight: 0.6
+        proximity_window: 20
+      - regex: "Access-Control-Allow-Origin|CORS"
+        weight: 0.7
+        proximity_window: 25
+      - regex: "Permission denied|access.*denied"
+        weight: 0.5
+        proximity_window: 15
+    
+    severity: "MEDIUM"
+    category: ["security", "cors"]
+    
+    remediation:
+      description: "Browser security policy violation"
+      common_causes:
+        - "CORS policy restrictions"
+        - "Same-origin policy violations"
+        - "Insufficient permissions for operation"
+        - "Cross-frame access attempts"
+      
+      suggested_commands:
+        - "Configure proper CORS headers on server"
+        - "Use proxy or JSONP for cross-origin requests"
+        - "Check browser security settings"
+        - "Validate origin and referrer policies"
+      
+      documentation_links:
+        - "https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS"
+        - "https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy"
+    
+    context_extraction:
+      lines_before: 10
+      lines_after: 8
+
+related_patterns:
+  - id: "javascript_syntax_error"
+    related_to: ["javascript_reference_error"]
+  - id: "javascript_type_error"
+    related_to: ["javascript_reference_error", "javascript_unhandled_promise_rejection"]
+  - id: "javascript_range_error"
+    related_to: ["javascript_memory_error"]
+  - id: "javascript_unhandled_promise_rejection"
+    related_to: ["javascript_type_error"]
+  - id: "javascript_memory_error"
+    related_to: ["javascript_range_error"]
