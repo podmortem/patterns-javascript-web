@@ -1,0 +1,31 @@
+name: "JavaScript Web Framework Patterns"
+version: "1.0.0"
+description: "Error patterns for JavaScript/Node.js web frameworks including Express, NestJS, Fastify, Koa, and Hapi"
+author: "Podmortem Community"
+
+languages:
+  - javascript
+  - typescript
+
+frameworks:
+  - express
+  - nestjs
+  - fastify
+  - koa
+  - hapi
+  - common
+
+focuses:
+  - "Express.js middleware and routing errors"
+  - "NestJS dependency injection and decorator issues"
+  - "Async/await and Promise rejection handling"
+  - "TypeScript compilation and type errors"
+  - "JSON parsing and validation errors"
+  - "Database ORM integration issues"
+  - "Authentication and session management"
+  - "WebSocket and real-time communication errors"
+  - "File upload and processing failures"
+  - "API rate limiting and throttling"
+
+
+
